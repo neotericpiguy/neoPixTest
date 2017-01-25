@@ -23,6 +23,7 @@ int lastState = 0;
 int pushCount =0;
 
 void setup() {
+// Serial.begin(9600); //DEBUG output
  pinMode(2, INPUT);
  currentState = STATE_LIGHTNING;
  brightness = 255;
@@ -58,8 +59,8 @@ void startFadeSunset() {
   currentState = STATE_FADE_COLORS;
 }
 
-void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint16_t time) {
-  const uint8_t steps = 3;              // higher the steps the more course the transition steps=10 would be a 1 second pixel update
+void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint32_t time) {
+  const uint8_t steps = 8;              // higher the steps the more course the transition steps=10 would be a 1 second pixel update
   const uint8_t scaler = 8;             // magic number defines the bit shifting of colors
   const uint16_t duration = 1 << steps; // milisecond duration  = 2^steps
 
@@ -73,14 +74,15 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
   int32_t newg = (int32_t)g1 << scaler;
   int32_t newb = (int32_t)b1 << scaler;
 
-  for(int i = 0 ; i < time; i++) {
+  for(uint32_t i = 0 ; i < time; i++) {
     newr += rinc;
     newg += ginc;
     newb += binc;
 
-    pixels.setPixelColor(0,newr >> scaler,newg >> scaler,newb >> scaler);
-    pixels.setPixelColor(1,newr >> scaler,newg >> scaler,newb >> scaler);
-    pixels.show();
+    for(int i=0;i<NUMPIXELS;i++){
+      pixels.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
+      pixels.show();
+    }
 
     delay(duration);
   }
@@ -93,32 +95,32 @@ void loop() {
       {
         fader(165,42,42, //Start Color
               139,50,0,  //End Color
-              60000);    //Duration of fade
+              75000);    //Duration of fade
 
         fader(139,50,0,
               178,34,34,
-              60000);
+              75000);
 
         fader(178,34,34,
               255,20,147,
-              60000);
+              75000);
 
         fader(255,20,147,
               199,21,133,
-              60000);
+              75000);
 
         fader(199,21,133,
               139,0,139,
-              60000);
+              75000);
 
-        fader(139,0,139,
-              0,0,0,
-              60000);
+//        fader(139,0,139, //use smooth fade of STATE_FADE_SUNSET
+//              0,0,0,
+//              75000);
 
-        currentState = STATE_LIGHTNING;
+        currentState = STATE_FADE_SUNSET;
       }
       break;
-    case STATE_FADE_SUNSET: //Not using this state anymore
+    case STATE_FADE_SUNSET:
       if(time % 100 == 0){  
         brightness--;
         pixels.setPixelColor(0,(brightness*250/255),(brightness*38/255),(brightness*0/255));
