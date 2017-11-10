@@ -1,58 +1,66 @@
 #include "Adafruit_NeoPixel.h"
 
-#define PIN 6
-#define NUMPIXELS 4
+#define STRIP_PIN 6
+#define NUMPIXELS 18 
 #define PUSHBUTTON 2
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS,PIN,NEO_GRB +
-   NEO_KHZ800);
+#define LIGHTNING_START  0  //The Whole lightning strip
+#define LIGHTNING_STOP   8
+#define LIGHTNING1_START 0  //The first half that has a short flash
+#define LIGHTNING1_STOP  3
+#define LIGHTNING2_START 4  //The Second half of the strap that has longer flash
+#define LIGHTNING2_STOP  8
+#define SUNSET_START     9  //Sunset strip 
+#define SUNSET_STOP      17
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS,STRIP_PIN,NEO_GRB + NEO_KHZ800);
   
- enum STATE {
+enum STATE {
  STATE_FADE_SUNSET,
  STATE_FADE_COLORS,
- STATE_LIGHTNING
+ STATE_LIGHTNING_AND_SUNSET,
+ STATE_LIGHTNING_01,
+ STATE_LIGHTNING_02,
+ STATE_LIGHTNING_03,
+ STATE_LIGHTNING_04,
+ STATE_LIGHTNING_05,
+ STATE_LIGHTNING_06,
+ STATE_LIGHTNING_07,
+ STATE_LIGHTNING_08,
+ STATE_LIGHTNING_09,
+ STATE_LIGHTNING_10
 };
 
 STATE currentState;
 unsigned long time;
+unsigned long count;
 int brightness;
-int switchState = 0;
-int count = 0;
-int lastState = 0;
-int pushCount =0;
+int lastFade;
+bool t;
 
 void setup() {
 // Serial.begin(9600); //DEBUG output
  pinMode(2, INPUT);
- currentState = STATE_LIGHTNING;
+ currentState = STATE_LIGHTNING_01;
+ time = 0;
+ count = 0;
+ lastFade = 0;
  brightness = 255;
- pixels.begin();
-  
-}
+ strip.begin();
 
-//This function will wait for milliseconds and read the 
-//if you did readSwitchDelay(1000) it would wait 1000 milliseoncds or 1 second, BUT
-//it would also check the push button for if some presses it
-bool readSwitchDelay(int millis) {
-  while(millis>0 && !digitalRead(PUSHBUTTON)) //keep delaying until a push button is pressed or the milliseconds run out
-  {
-    delay(1);
-    millis--;
-  }
-
-  if(millis <= 0)
-    return false;
-
-  return true; //return true if button  was pushed
+ //make sure all pixels are off
+ for(int i=0;i<NUMPIXELS;i++){
+   strip.setPixelColor(i, strip.Color(0,0,0));
+   strip.show();
+ }
 }
 
 //Reset the brightness
 void startFadeSunset() {
-  //Make sure the lightning pixels aren't on
-  for(int i=0;i<NUMPIXELS;i++){
-    pixels.setPixelColor(i, pixels.Color(0,0,0));
-    pixels.show();
+  //Make sure the lightning strip aren't on
+  for(int i=LIGHTNING_START;i<LIGHTNING_STOP;i++){
+    strip.setPixelColor(i, strip.Color(0,0,0));
+    strip.show();
   }
   //reset brightness for fade
   brightness = 255;
@@ -61,7 +69,7 @@ void startFadeSunset() {
 
 void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint32_t time) {
   const uint8_t steps = 8;              // higher the steps the more course the transition steps=10 would be a 1 second pixel update
-  const uint8_t scaler = 8;             // magic number defines the bit shifting of colors
+  const uint8_t scaler = 7;             // magic number defines the bit shifting of colors
   const uint16_t duration = 1 << steps; // milisecond duration  = 2^steps
 
   time = time >> steps;
@@ -74,14 +82,15 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
   int32_t newg = (int32_t)g1 << scaler;
   int32_t newb = (int32_t)b1 << scaler;
 
-  for(uint32_t i = 0 ; i < time; i++) {
+  for(uint32_t i = 0 ; i < time; i++) 
+  {
     newr += rinc;
     newg += ginc;
     newb += binc;
 
-    for(int i=0;i<NUMPIXELS;i++){
-      pixels.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
-      pixels.show();
+    for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
+      strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
+      strip.show();
     }
 
     delay(duration);
@@ -89,12 +98,53 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 }
 
 void loop() {
-  time = millis();
+  static int32_t newr;
+  static int32_t newg;
+  static int32_t newb;
+
+  if(digitalRead(PUSHBUTTON))
+    startFadeSunset();
+
+  if(lastFade==1)
+  {
+    if(count == 0)
+    {
+      newr = 139;
+      newg = 0;
+      newb = 139;
+      t = false;
+      currentState = STATE_LIGHTNING_01;
+    }
+
+    count++;
+
+    if(count % 50 == 0 || (newr < 20 && count % 5 == 0))
+    {
+      newr-=1;
+      newb-=1;
+
+      if(newr < 1)
+      {
+        for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
+          strip.setPixelColor(i,0,0,0);
+          strip.show();
+        }
+
+        lastFade = 0;
+      }
+
+      for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
+        strip.setPixelColor(i,newr ,newg ,newb );
+        strip.show();
+      }
+    }
+  }
+
   switch(currentState){
     case STATE_FADE_COLORS:
       {
-        fader(165,42,42, //Start Color
-              139,50,0,  //End Color
+        fader(166,42,42, //Start Color
+              140,50,0,  //End Color
               75000);    //Duration of fade
 
         fader(139,50,0,
@@ -113,124 +163,170 @@ void loop() {
               139,0,139,
               75000);
 
-//        fader(139,0,139, //use smooth fade of STATE_FADE_SUNSET
-//              0,0,0,
-//              75000);
-
-        currentState = STATE_FADE_SUNSET;
+        lastFade = 1;
+        count = 0;
+        currentState = STATE_LIGHTNING_01;
       }
       break;
-    case STATE_FADE_SUNSET:
-      if(time % 100 == 0){  
-        brightness--;
-        pixels.setPixelColor(0,(brightness*250/255),(brightness*38/255),(brightness*0/255));
-        pixels.setPixelColor(1,(brightness*250/255),(brightness*38/255),(brightness*0/255));
-        pixels.show();
-
-        if(brightness==5)
-        {
-          currentState = STATE_LIGHTNING;
-        }
-      }
-      break;
-    case STATE_LIGHTNING:
-      while(true)
+    case STATE_LIGHTNING_01:
       {
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(0,255,255,225); 
-          pixels.setPixelColor(1,200,200,200);
-          //pixels.setPixelColor(2,140,140,225);
-          pixels.show(); // This sends the updated pixel color to the hardware.
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING1_START;i<=LIGHTNING1_STOP;i++){
+          strip.setPixelColor(i,255,255,225); 
+          strip.show(); // This sends the updated pixel color to the hardware.
         }
 
-        //if DUring the 110 millisecond delay the user pushes the button the readSwitchDelay function will exit and 
-        //run the startFadeSunset function
-        //  The start FadeSunset will reset the bright ness to max and change the state to STATE_FADE_SUNSET
-        if(readSwitchDelay(110))
+        if(millis()-time > 110)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_02;
+          time = 0;
+        }
+      }
+      break;
+    case STATE_LIGHTNING_02:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+          strip.setPixelColor(i, strip.Color(0,0,0));
+          strip.show();
+        }
+//        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+//          strip.setPixelColor(i, strip.Color(0,0,0));
+//          strip.show();
+//        }
+
+        if(millis()-time > 100)
+        {
+          currentState = STATE_LIGHTNING_03;
+          time = 0;
+        }
+      }
+      break;
+    case STATE_LIGHTNING_03:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
+          strip.setPixelColor(i,255,255,225); 
+          strip.show();
         }
 
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(i, pixels.Color(0,0,0));
-          pixels.show();
-        }
-        if(readSwitchDelay(100))
+        if(millis()-time > 50)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_04;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(2,255,255,225); 
-          pixels.setPixelColor(3,200,200,200);
-          pixels.show();
+      }
+      break;
+    case STATE_LIGHTNING_04:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+          strip.setPixelColor(i, strip.Color(0,0,0));
+          strip.show();
         }
-        if(readSwitchDelay(50))
+
+        if(millis()-time > 100)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_05;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(i, pixels.Color(0,0,0));
-          pixels.show();
+      }
+      break;
+    case STATE_LIGHTNING_05:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
+          strip.setPixelColor(i,255,255,225); 
+          strip.show();
         }
-        if(readSwitchDelay(100))
+
+        if(millis()-time > 190)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_06;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(2,255,255,225); 
-          pixels.setPixelColor(3,200,200,200);
-          pixels.show();
+      }
+      break;
+    case STATE_LIGHTNING_06:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+          strip.setPixelColor(i, strip.Color(0,0,0));
+          strip.show();
         }
-        if(readSwitchDelay(190))
+
+        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
+          strip.setPixelColor(i,255,255,225); 
+          strip.show();
+        }
+
+        if(millis()-time > 50)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_07;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(i, pixels.Color(0,0,0));
-          pixels.show();
+      }
+      break;
+    case STATE_LIGHTNING_07:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+          strip.setPixelColor(i, strip.Color(0,0,0));
+          strip.show();
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(2,255,255,225); 
-          pixels.setPixelColor(3,200,200,200);
-          pixels.show();
-        }
-        if(readSwitchDelay(50))
+
+        if(millis()-time > 40)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_08;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(i, pixels.Color(0,0,0));
-          pixels.show();
+      }
+      break;
+
+    case STATE_LIGHTNING_08:
+      {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
+          strip.setPixelColor(i,255,255,225); 
+          strip.show();
         }
-        if(readSwitchDelay(40))
+
+        if(millis()-time > 50)
         {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_09;
+          time = 0;
         }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(2,255,255,225); 
-          pixels.setPixelColor(3,200,200,200);
-          pixels.show();
+      }
+      break;
+    case STATE_LIGHTNING_09: {
+        if(time == 0 )
+          time = millis();
+
+        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
+          strip.setPixelColor(i, strip.Color(0,0,0));
+          strip.show();
         }
-        if(readSwitchDelay(50))
+
+        if(millis()-time > 9000)
         {
-          startFadeSunset();
-          break;
-        }
-        for(int i=0;i<NUMPIXELS;i++){
-          pixels.setPixelColor(i, pixels.Color(0,0,0));
-          pixels.show();
-        }
-        if(readSwitchDelay(9000))
-        {
-          startFadeSunset();
-          break;
+          currentState = STATE_LIGHTNING_01;
+          time = 0;
         }
       }
       break;
