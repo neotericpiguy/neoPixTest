@@ -27,8 +27,7 @@ enum STATE {
  STATE_LIGHTNING_06,
  STATE_LIGHTNING_07,
  STATE_LIGHTNING_08,
- STATE_LIGHTNING_09,
- STATE_LIGHTNING_10
+ STATE_LIGHTNING_09
 };
 
 STATE currentState;
@@ -90,246 +89,214 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 
     for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
       strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
-      strip.show();
     }
+    strip.show();
 
     delay(duration);
   }
 }
 
 void loop() {
-  static int32_t newr;
-  static int32_t newg;
-  static int32_t newb;
-
   if(digitalRead(PUSHBUTTON))
     startFadeSunset();
 
-  if(lastFade==1)
-  {
-    if(count == 0)
-    {
-      newr = 139;
+  if (lastFade == 1) {
+    static int32_t newr;
+    static int32_t newg;
+    static int32_t newb;
+
+    if (count == 0) {
+      newr = 11; // last fade starting color
       newg = 0;
-      newb = 139;
+      newb = newr;
       t = false;
       currentState = STATE_LIGHTNING_01;
     }
 
     count++;
 
-    if(count % 50 == 0 || (newr < 20 && count % 5 == 0))
-    {
-      newr-=1;
-      newb-=1;
+//    if (count % 1000 == 0 || (newr < 20 && count % 5 == 0)) {
+//    if (count % 6666 == 0) { //10.30 minutes
+    if (count % 6666 == 0) { //10.30 minutes
+      newr -= 1;
+      newb -= 1;
 
-      if(newr < 1)
-      {
-        for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
-          strip.setPixelColor(i,0,0,0);
-          strip.show();
+      if (newr < 1) {
+        for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
+          strip.setPixelColor(i, 0, 0, 0);
         }
+        strip.show();
 
         lastFade = 0;
       }
 
-      for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
-        strip.setPixelColor(i,newr ,newg ,newb );
-        strip.show();
+      for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
+        strip.setPixelColor(i, newr, newg, newb);
       }
+      strip.show();
     }
   }
 
-  switch(currentState){
-    case STATE_FADE_COLORS:
-      {
-        fader(166,42,42, //Start Color
-              140,50,0,  //End Color
-              75000);    //Duration of fade
+  switch (currentState) {
+    case STATE_FADE_COLORS: {
+      fader(166, 42, 42,  // Start Color
+            140, 50, 0,   // End Color
+            420000);       // Duration of fade
 
-        fader(139,50,0,
-              178,34,34,
-              75000);
+      fader(139, 50, 0, 
+            178, 34, 34,
+            420000);
 
-        fader(178,34,34,
-              255,20,147,
-              75000);
+      fader(178, 34, 34, 
+            255, 20, 147, 
+            420000);
 
-        fader(255,20,147,
-              199,21,133,
-              75000);
+      fader(255, 20, 147, 
+            199, 21, 133, 
+            420000);
 
-        fader(199,21,133,
-              139,0,139,
-              75000);
+      fader(199, 21, 133, 
+            139, 0, 139, 
+            300000);
 
-        lastFade = 1;
-        count = 0;
-        currentState = STATE_LIGHTNING_01;
+      fader(139, 0, 139, 
+            11, 0, 11, 
+            240000);
+
+      lastFade = 1;
+      count = 0;
+      currentState = STATE_LIGHTNING_01;
+    } break;
+
+    case STATE_LIGHTNING_01: {
+      if (time == 0) time = millis();
+
+      for (int i = LIGHTNING1_START; i <= LIGHTNING1_STOP; i++) {
+        strip.setPixelColor(i, 255, 255, 225);
       }
-      break;
-    case STATE_LIGHTNING_01:
-      {
-        if(time == 0 )
-          time = millis();
+      strip.show();  // This sends the updated pixel color to the hardware.
 
-        for(int i=LIGHTNING1_START;i<=LIGHTNING1_STOP;i++){
-          strip.setPixelColor(i,255,255,225); 
-          strip.show(); // This sends the updated pixel color to the hardware.
-        }
-
-        if(millis()-time > 110)
-        {
-          currentState = STATE_LIGHTNING_02;
-          time = 0;
-        }
+      if (millis() - time > 110) {
+        currentState = STATE_LIGHTNING_02;
+        time = 0;
       }
-      break;
-    case STATE_LIGHTNING_02:
-      {
-        if(time == 0 )
-          time = millis();
+    } break;
 
-        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-          strip.show();
-        }
-//        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-//          strip.setPixelColor(i, strip.Color(0,0,0));
-//          strip.show();
-//        }
+    case STATE_LIGHTNING_02: {
+      if (time == 0) time = millis();
 
-        if(millis()-time > 100)
-        {
-          currentState = STATE_LIGHTNING_03;
-          time = 0;
-        }
+      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
       }
-      break;
-    case STATE_LIGHTNING_03:
-      {
-        if(time == 0 )
-          time = millis();
+      strip.show();
 
-        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
-          strip.setPixelColor(i,255,255,225); 
-          strip.show();
-        }
-
-        if(millis()-time > 50)
-        {
-          currentState = STATE_LIGHTNING_04;
-          time = 0;
-        }
+      if (millis() - time > 100) {
+        currentState = STATE_LIGHTNING_03;
+        time = 0;
       }
-      break;
-    case STATE_LIGHTNING_04:
-      {
-        if(time == 0 )
-          time = millis();
+    } break;
 
-        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-          strip.show();
-        }
+    case STATE_LIGHTNING_03: {
+      if (time == 0) time = millis();
 
-        if(millis()-time > 100)
-        {
-          currentState = STATE_LIGHTNING_05;
-          time = 0;
-        }
+      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
+        strip.setPixelColor(i, 255, 255, 225);
       }
-      break;
-    case STATE_LIGHTNING_05:
-      {
-        if(time == 0 )
-          time = millis();
+      strip.show();
 
-        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
-          strip.setPixelColor(i,255,255,225); 
-          strip.show();
-        }
-
-        if(millis()-time > 190)
-        {
-          currentState = STATE_LIGHTNING_06;
-          time = 0;
-        }
+      if (millis() - time > 50) {
+        currentState = STATE_LIGHTNING_04;
+        time = 0;
       }
-      break;
-    case STATE_LIGHTNING_06:
-      {
-        if(time == 0 )
-          time = millis();
+    } break;
 
-        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-          strip.show();
-        }
+    case STATE_LIGHTNING_04: {
+      if (time == 0) time = millis();
 
-        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
-          strip.setPixelColor(i,255,255,225); 
-          strip.show();
-        }
-
-        if(millis()-time > 50)
-        {
-          currentState = STATE_LIGHTNING_07;
-          time = 0;
-        }
+      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
       }
-      break;
-    case STATE_LIGHTNING_07:
-      {
-        if(time == 0 )
-          time = millis();
+      strip.show();
 
-        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-          strip.show();
-        }
-
-        if(millis()-time > 40)
-        {
-          currentState = STATE_LIGHTNING_08;
-          time = 0;
-        }
+      if (millis() - time > 100) {
+        currentState = STATE_LIGHTNING_05;
+        time = 0;
       }
-      break;
+    } break;
 
-    case STATE_LIGHTNING_08:
-      {
-        if(time == 0 )
-          time = millis();
+    case STATE_LIGHTNING_05: {
+      if (time == 0) time = millis();
 
-        for(int i=LIGHTNING2_START;i<=LIGHTNING2_STOP;i++){
-          strip.setPixelColor(i,255,255,225); 
-          strip.show();
-        }
-
-        if(millis()-time > 50)
-        {
-          currentState = STATE_LIGHTNING_09;
-          time = 0;
-        }
+      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
+        strip.setPixelColor(i, 255, 255, 225);
       }
-      break;
+      strip.show();
+
+      if (millis() - time > 190) {
+        currentState = STATE_LIGHTNING_06;
+        time = 0;
+      }
+    } break;
+
+    case STATE_LIGHTNING_06: {
+      if (time == 0) time = millis();
+
+      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
+      }
+      strip.show();
+
+      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
+        strip.setPixelColor(i, 255, 255, 225);
+      }
+      strip.show();
+
+      if (millis() - time > 50) {
+        currentState = STATE_LIGHTNING_07;
+        time = 0;
+      }
+    } break;
+
+    case STATE_LIGHTNING_07: {
+      if (time == 0) time = millis();
+
+      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
+      }
+      strip.show();
+
+      if (millis() - time > 40) {
+        currentState = STATE_LIGHTNING_08;
+        time = 0;
+      }
+    } break;
+
+    case STATE_LIGHTNING_08: {
+      if (time == 0) time = millis();
+
+      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
+        strip.setPixelColor(i, 255, 255, 225);
+      }
+      strip.show();
+
+      if (millis() - time > 50) {
+        currentState = STATE_LIGHTNING_09;
+        time = 0;
+      }
+    } break;
+
     case STATE_LIGHTNING_09: {
-        if(time == 0 )
-          time = millis();
+      if (time == 0) time = millis();
 
-        for(int i=LIGHTNING_START;i<=LIGHTNING_STOP;i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-          strip.show();
-        }
-
-        if(millis()-time > 9000)
-        {
-          currentState = STATE_LIGHTNING_01;
-          time = 0;
-        }
+      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
       }
-      break;
+      strip.show();
+
+      if (millis() - time > 9000) {
+        currentState = STATE_LIGHTNING_01;
+        time = 0;
+      }
+    } break;
   }
 }
-
