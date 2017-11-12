@@ -13,35 +13,55 @@
 #define SUNSET_START     9  //Sunset strip 
 #define SUNSET_STOP      17
 
+//0-4
+//5-8
+//9-12
+
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS,STRIP_PIN,NEO_GRB + NEO_KHZ800);
   
 enum STATE {
  STATE_FADE_SUNSET,
  STATE_FADE_COLORS,
  STATE_LIGHTNING_AND_SUNSET,
- STATE_LIGHTNING_01,
- STATE_LIGHTNING_02,
- STATE_LIGHTNING_03,
- STATE_LIGHTNING_04,
- STATE_LIGHTNING_05,
- STATE_LIGHTNING_06,
- STATE_LIGHTNING_07,
- STATE_LIGHTNING_08,
- STATE_LIGHTNING_09
+ STATE_LIGHTNING,
 };
 
-STATE currentState;
-unsigned long time;
+struct LightningDef{
+  int startPixel;
+  int stopPixel;
+  int r;
+  int g;
+  int b;
+  unsigned long duration;
+};
+
+int currentState;
 unsigned long count;
 int brightness;
 int lastFade;
 bool t;
 
+LightningDef lightning[] = {
+  {0, 4,  135, 206, 250, 20},
+  {0, 12, 0,   0,   0,   109},
+  {0, 4,  135, 206, 250, 44},
+  {0, 12, 0,   0,   0,   89},
+  {0, 4,  135, 206, 250, 29},
+  {0, 12, 0,   0,   0,   23000}, //end of flash 1
+  {0, 4,  135, 206, 250, 35},
+  {0, 12, 0,   0,   0,   150},
+  {0, 4,  135, 206, 250, 15},
+  {0, 12, 0,   0,   0,   300},
+  {0, 2,  135, 206, 255, 290},
+  {0, 12, 0,   0,   0,   130},
+  {0, 2,  135, 206, 255, 50},
+  {0, 12, 0,   0,   0,   28000}, //end of flash 2
+};
+
 void setup() {
 // Serial.begin(9600); //DEBUG output
  pinMode(2, INPUT);
- currentState = STATE_LIGHTNING_01;
- time = 0;
+ currentState = STATE_LIGHTNING;
  count = 0;
  lastFade = 0;
  brightness = 255;
@@ -64,6 +84,29 @@ void startFadeSunset() {
   //reset brightness for fade
   brightness = 255;
   currentState = STATE_FADE_COLORS;
+}
+
+void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned long duration)
+{
+  static unsigned long time = 0;
+
+  if (time == 0)
+  {
+    time = millis();
+
+    for (int i = start ; i <= stop; i++) {
+      strip.setPixelColor(i, r, g, b);
+    }
+
+    strip.show();  // This sends the updated pixel color to the hardware.
+    return;
+  }
+
+  if (millis() - time > duration) {
+    currentState++;
+    time = 0;
+  }
+
 }
 
 void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint32_t time) {
@@ -110,7 +153,7 @@ void loop() {
       newg = 0;
       newb = newr;
       t = false;
-      currentState = STATE_LIGHTNING_01;
+      currentState = STATE_LIGHTNING;
     }
 
     count++;
@@ -135,6 +178,18 @@ void loop() {
       }
       strip.show();
     }
+  }
+
+  if(currentState >= (int)STATE_LIGHTNING)
+  {
+    int lightningIndex = currentState - (int)STATE_LIGHTNING;
+    setLightning(lightning[lightningIndex].startPixel,
+                 lightning[lightningIndex].stopPixel, 
+                 lightning[lightningIndex].r,
+                 lightning[lightningIndex].g, 
+                 lightning[lightningIndex].b,
+                 lightning[lightningIndex].duration);
+      return;
   }
 
   switch (currentState) {
@@ -165,138 +220,7 @@ void loop() {
 
       lastFade = 1;
       count = 0;
-      currentState = STATE_LIGHTNING_01;
-    } break;
-
-    case STATE_LIGHTNING_01: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING1_START; i <= LIGHTNING1_STOP; i++) {
-        strip.setPixelColor(i, 255, 255, 225);
-      }
-      strip.show();  // This sends the updated pixel color to the hardware.
-
-      if (millis() - time > 110) {
-        currentState = STATE_LIGHTNING_02;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_02: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, 0));
-      }
-      strip.show();
-
-      if (millis() - time > 100) {
-        currentState = STATE_LIGHTNING_03;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_03: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
-        strip.setPixelColor(i, 255, 255, 225);
-      }
-      strip.show();
-
-      if (millis() - time > 50) {
-        currentState = STATE_LIGHTNING_04;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_04: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, 0));
-      }
-      strip.show();
-
-      if (millis() - time > 100) {
-        currentState = STATE_LIGHTNING_05;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_05: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
-        strip.setPixelColor(i, 255, 255, 225);
-      }
-      strip.show();
-
-      if (millis() - time > 190) {
-        currentState = STATE_LIGHTNING_06;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_06: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, 0));
-      }
-      strip.show();
-
-      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
-        strip.setPixelColor(i, 255, 255, 225);
-      }
-      strip.show();
-
-      if (millis() - time > 50) {
-        currentState = STATE_LIGHTNING_07;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_07: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, 0));
-      }
-      strip.show();
-
-      if (millis() - time > 40) {
-        currentState = STATE_LIGHTNING_08;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_08: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING2_START; i <= LIGHTNING2_STOP; i++) {
-        strip.setPixelColor(i, 255, 255, 225);
-      }
-      strip.show();
-
-      if (millis() - time > 50) {
-        currentState = STATE_LIGHTNING_09;
-        time = 0;
-      }
-    } break;
-
-    case STATE_LIGHTNING_09: {
-      if (time == 0) time = millis();
-
-      for (int i = LIGHTNING_START; i <= LIGHTNING_STOP; i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, 0));
-      }
-      strip.show();
-
-      if (millis() - time > 9000) {
-        currentState = STATE_LIGHTNING_01;
-        time = 0;
-      }
+      currentState = STATE_LIGHTNING;
     } break;
   }
 }
