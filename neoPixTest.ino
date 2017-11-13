@@ -6,10 +6,6 @@
 
 #define LIGHTNING_START  0  //The Whole lightning strip
 #define LIGHTNING_STOP   8
-#define LIGHTNING1_START 0  //The first half that has a short flash
-#define LIGHTNING1_STOP  3
-#define LIGHTNING2_START 4  //The Second half of the strap that has longer flash
-#define LIGHTNING2_STOP  8
 #define SUNSET_START     9  //Sunset strip 
 #define SUNSET_STOP      17
 
@@ -36,18 +32,17 @@ struct LightningDef{
 };
 
 int currentState;
-unsigned long count;
-int brightness;
 int lastFade;
 bool t;
 
-LightningDef lightning[] = {
+const LightningDef lightning[] = {
   {0, 4,  135, 206, 250, 20},
   {0, 12, 0,   0,   0,   109},
   {0, 4,  135, 206, 250, 44},
   {0, 12, 0,   0,   0,   89},
   {0, 4,  135, 206, 250, 29},
   {0, 12, 0,   0,   0,   23000}, //end of flash 1
+
   {0, 4,  135, 206, 250, 35},
   {0, 12, 0,   0,   0,   150},
   {0, 4,  135, 206, 250, 15},
@@ -56,22 +51,162 @@ LightningDef lightning[] = {
   {0, 12, 0,   0,   0,   130},
   {0, 2,  135, 206, 255, 50},
   {0, 12, 0,   0,   0,   28000}, //end of flash 2
+
+  {0, 4,  135, 206, 250, 80},
+  {0, 12, 0,   0,   0,   39},
+  {0, 4,  135, 206, 250, 50},
+  {0, 12, 0,   0,   0,   15},
+  {0, 4,  135, 206, 250, 75},
+  {0, 12, 0,   0,   0,   35},
+  {0, 4,  135, 206, 250, 55},
+  {0, 12, 0,   0,   0,   25},
+  {5, 8,  135, 206, 250, 84},
+  {0, 12, 0,   0,   0,   40},
+  {5, 8,  135, 206, 250, 46},
+  {0, 12, 0,   0,   0,   75},
+  {5, 8,  135, 206, 250, 84},
+  {0, 12, 0,   0,   0,   29},
+  {5, 8,  135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   2000},  //end of flash 3
+
+  {0, 4,  135, 206, 250, 110},
+  {0, 12, 0,   0,   0,   34},
+  {0, 4,  135, 206, 250, 300},
+  {0, 12, 0,   0,   0,   30},
+  {0, 4,  135, 206, 250, 30},
+  {0, 12, 0,   0,   0,   30},
+  {0, 4,  135, 206, 250, 380},
+  {0, 12, 0,   0,   0,   28000}, //end of flash 4
+
+  {5, 8,  135, 206, 250, 28},
+  {0, 12, 0,   0,   0,   98},
+  {5, 8,  135, 206, 250, 41},
+  {0, 12, 0,   0,   0,   1000},
+  {9, 12, 135, 206, 250, 35},
+  {0, 12, 0,   0,   0,   32},
+  {9, 12, 135, 206, 250, 30},
+  {0, 12, 0,   0,   0,   41},
+  {9, 12, 135, 206, 250, 185},
+  {0, 12, 0,   0,   0,   40},
+  {9, 12, 135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   24000}, //end of flash 5
+
+  {0, 4,  135, 206, 250, 35},
+  {0, 12, 0,   0,   0,   100},
+  {0, 4,  135, 206, 250, 15},
+  {0, 12, 0,   0,   0,   300},
+  {0, 4,  135, 206, 250, 290},
+  {0, 12, 0,   0,   0,   30},
+  {0, 4,  135, 206, 250, 50},
+  {0, 12, 0,   0,   0,   0},
+  {0, 4,  135, 206, 250, 16},
+  {0, 12, 0,   0,   0,   36},
+  {0, 4,  135, 206, 250, 23},
+  {0, 12, 0,   0,   0,   35},
+  {0, 4,  135, 206, 250, 16},
+  {0, 12, 0,   0,   0,   24000}, //end of flash 6
+
+  {5, 8,  135, 206, 250, 110},
+  {0, 12, 0,   0,   0,   34},
+  {5, 8,  135, 206, 250, 300},
+  {0, 12, 0,   0,   0,   31},
+  {5, 8,  135, 206, 250, 28},
+  {0, 12, 0,   0,   0,   34},
+  {5, 8,  135, 206, 250, 378},
+  {0, 12, 0,   0,   0,   427},
+  {5, 8,  135, 206, 250, 79},
+  {0, 12, 0,   0,   0,   49},
+  {5, 8,  135, 206, 250, 46},
+  {0, 12, 0,   0,   0,   52},
+  {5, 8,  135, 206, 250, 93},
+  {0, 12, 0,   0,   0,   29},
+  {5, 8,  135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   4000},  //end of flash 7
+
+  {0, 4,  135, 206, 250, 35},
+  {0, 12, 0,   0,   0,   150},
+  {0, 4,  135, 206, 250, 15},
+  {0, 12, 0,   0,   0,   290},
+  {0, 2,  135, 206, 250, 290},
+  {0, 12, 0,   0,   0,   130},
+  {0, 2,  135, 206, 250, 50},
+  {0, 12, 0,   0,   0,   130},   //end of flash 8
+
+  {0, 4,  135, 206, 250, 20},
+  {0, 12, 0,   0,   0,   109},
+  {0, 4,  135, 206, 250, 44},
+  {0, 12, 0,   0,   0,   89},
+  {0, 4,  135, 206, 250, 29},
+  {0, 12, 0,   0,   0,   0},     //end of flash 9
+
+  {0, 4,  135, 206, 250, 80},
+  {0, 12, 0,   0,   0,   39},
+  {0, 4,  135, 206, 250, 50},
+  {0, 12, 0,   0,   0,   15},
+  {0, 4,  135, 206, 250, 75},
+  {0, 12, 0,   0,   0,   35},
+  {0, 4,  135, 206, 250, 55},
+  {0, 12, 0,   0,   0,   25},
+  {5, 8,  135, 206, 250, 84},
+  {0, 12, 0,   0,   0,   40},
+  {5, 8,  135, 206, 250, 46},
+  {0, 12, 0,   0,   0,   75},
+  {5, 8,  135, 206, 250, 84},
+  {0, 12, 0,   0,   0,   29},
+  {5, 8,  135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   2000},  //end of flash 10
+
+  {5, 8,  135, 206, 250, 28},
+  {0, 12, 0,   0,   0,   98},
+  {5, 8,  135, 206, 250, 41},
+  {0, 12, 0,   0,   0,   1000},
+  {9, 12, 135, 206, 250, 35},
+  {0, 12, 0,   0,   0,   32},
+  {9, 12, 135, 206, 250, 20},
+  {0, 12, 0,   0,   0,   41},
+  {9, 12, 135, 206, 250, 185},
+  {0, 12, 0,   0,   0,   40},
+  {9, 12, 135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   0},
+  {5, 8,  135, 206, 250, 110},
+  {0, 12, 0,   0,   0,   34},
+  {5, 8,  135, 206, 250, 300},
+  {0, 12, 0,   0,   0,   31},
+  {5, 8,  135, 206, 250, 28},
+  {0, 12, 0,   0,   0,   34},
+  {5, 8,  135, 206, 250, 378},
+  {0, 12, 0,   0,   0,   427},
+  {5, 8,  135, 206, 250, 79},
+  {0, 12, 0,   0,   0,   49},
+  {5, 8,  135, 206, 250, 46},
+  {0, 12, 0,   0,   0,   52},
+  {5, 8,  135, 206, 250, 93},
+  {0, 12, 0,   0,   0,   29},
+  {5, 8,  135, 206, 250, 25},
+  {0, 12, 0,   0,   0,   21000}, //end of flash 11
+
+  {9, 12, 135, 206, 250, 110},
+  {0, 12, 0,   0,   0,   34},
+  {9, 12, 135, 206, 250, 300},
+  {0, 12, 0,   0,   0,   30},
+  {9, 12, 135, 206, 250, 30},
+  {0, 12, 0,   0,   0,   30},
+  {9, 12, 135, 206, 250, 380},
+  {0, 12, 0,   0,   0,   26000}, //end of flash 12
 };
 
 void setup() {
 // Serial.begin(9600); //DEBUG output
  pinMode(2, INPUT);
  currentState = STATE_LIGHTNING;
- count = 0;
  lastFade = 0;
- brightness = 255;
  strip.begin();
 
  //make sure all pixels are off
  for(int i=0;i<NUMPIXELS;i++){
    strip.setPixelColor(i, strip.Color(0,0,0));
-   strip.show();
  }
+ strip.show();
 }
 
 //Reset the brightness
@@ -79,17 +214,15 @@ void startFadeSunset() {
   //Make sure the lightning strip aren't on
   for(int i=LIGHTNING_START;i<LIGHTNING_STOP;i++){
     strip.setPixelColor(i, strip.Color(0,0,0));
-    strip.show();
   }
+  strip.show();
   //reset brightness for fade
-  brightness = 255;
   currentState = STATE_FADE_COLORS;
 }
 
 void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned long duration)
 {
   static unsigned long time = 0;
-
   if (time == 0)
   {
     time = millis();
@@ -140,6 +273,7 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 }
 
 void loop() {
+  static unsigned long count = 0; 
   if(digitalRead(PUSHBUTTON))
     startFadeSunset();
 
@@ -183,13 +317,18 @@ void loop() {
   if(currentState >= (int)STATE_LIGHTNING)
   {
     int lightningIndex = currentState - (int)STATE_LIGHTNING;
+
+    if(lightningIndex > sizeof(lightning)/sizeof(lightning[0]))
+      currentState = STATE_LIGHTNING;
+
     setLightning(lightning[lightningIndex].startPixel,
-                 lightning[lightningIndex].stopPixel, 
-                 lightning[lightningIndex].r,
-                 lightning[lightningIndex].g, 
-                 lightning[lightningIndex].b,
-                 lightning[lightningIndex].duration);
-      return;
+        lightning[lightningIndex].stopPixel, 
+        lightning[lightningIndex].r,
+        lightning[lightningIndex].g, 
+        lightning[lightningIndex].b,
+        lightning[lightningIndex].duration);
+
+    return;
   }
 
   switch (currentState) {
