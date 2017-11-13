@@ -1,7 +1,7 @@
 #include "Adafruit_NeoPixel.h"
 
 #define STRIP_PIN 6
-#define NUMPIXELS 18 
+#define NUMPIXELS 18  // can't be more than 256
 #define PUSHBUTTON 2
 
 #define LIGHTNING_START  0  //The Whole lightning strip
@@ -16,19 +16,17 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS,STRIP_PIN,NEO_GRB + NEO_KHZ800);
   
 enum STATE {
- STATE_FADE_SUNSET,
  STATE_FADE_COLORS,
- STATE_LIGHTNING_AND_SUNSET,
  STATE_LIGHTNING,
 };
 
 struct LightningDef{
-  int startPixel;
-  int stopPixel;
-  int r;
-  int g;
-  int b;
-  unsigned long duration;
+  uint8_t startPixel;  
+  uint8_t stopPixel;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  unsigned int duration; 
 };
 
 int currentState;
@@ -239,7 +237,6 @@ void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned
     currentState++;
     time = 0;
   }
-
 }
 
 void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint32_t time) {
