@@ -195,7 +195,7 @@ const LightningDef lightning[] = {
 
 void setup() {
 // Serial.begin(9600); //DEBUG output
- pinMode(2, INPUT);
+ pinMode(PUSHBUTTON, INPUT);
  currentState = STATE_LIGHTNING;
  lastFade = 0;
  strip.begin();
@@ -256,9 +256,20 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 
   for(uint32_t i = 0 ; i < time; i++) 
   {
-    newr += rinc;
-    newg += ginc;
-    newb += binc;
+    if((rinc < 0 && newr + rinc > r2) || (rinc > 0 && newr + rinc < r2))
+      newr += rinc;
+    else
+      newr = (int32_t)r2 << scaler;
+
+    if((ginc < 0 && newg + ginc > r2) || (ginc > 0 && newg + ginc < r2))
+      newg += ginc;
+    else
+      newg = (int32_t)g2 << scaler;
+
+    if((binc < 1 && newb + binc > r2) || (binc > 0 && newb + binc < r2))
+      newb += binc;
+    else
+      newb = (int32_t)b2 << scaler;
 
     for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
       strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
@@ -332,7 +343,7 @@ void loop() {
     case STATE_FADE_COLORS: {
       fader(166, 42, 42,  // Start Color
             140, 50, 0,   // End Color
-            420000);       // Duration of fade
+            420000);      // Duration of fade
 
       fader(139, 50, 0, 
             178, 34, 34,
