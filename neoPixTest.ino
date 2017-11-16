@@ -256,20 +256,9 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 
   for(uint32_t i = 0 ; i < time; i++) 
   {
-    if((rinc < 0 && newr + rinc > r2) || (rinc > 0 && newr + rinc < r2))
-      newr += rinc;
-    else
-      newr = (int32_t)r2 << scaler;
-
-    if((ginc < 0 && newg + ginc > r2) || (ginc > 0 && newg + ginc < r2))
-      newg += ginc;
-    else
-      newg = (int32_t)g2 << scaler;
-
-    if((binc < 1 && newb + binc > r2) || (binc > 0 && newb + binc < r2))
-      newb += binc;
-    else
-      newb = (int32_t)b2 << scaler;
+    newr += rinc;
+    newg += ginc;
+    newb += binc;
 
     for(int i=SUNSET_START;i<=SUNSET_STOP;i++){ 
       strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
