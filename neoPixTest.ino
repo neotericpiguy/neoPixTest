@@ -334,8 +334,8 @@ void loop() {
 
       fader(10, 2, 0, 0, 0, 0, 100000);
 
-      lastFade = 1;
-      count = 0;
+//      lastFade = 1;
+//      count = 0;
       currentState = STATE_LIGHTNING;
     } break;
   }
