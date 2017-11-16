@@ -6,7 +6,7 @@
 
 #define LIGHTNING_START  0  //The Whole lightning strip
 #define LIGHTNING_STOP   8
-#define SUNSET_START     9  //Sunset strip 
+#define SUNSET_START     0  //Sunset strip 
 #define SUNSET_STOP      17
 
 //0-4
@@ -241,7 +241,7 @@ void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned
 
 void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, uint32_t time) {
   const uint8_t steps = 8;              // higher the steps the more course the transition steps=10 would be a 1 second pixel update
-  const uint8_t scaler = 7;             // magic number defines the bit shifting of colors
+  const uint8_t scaler = 8;             // magic number defines the bit shifting of colors
   const uint16_t duration = 1 << steps; // milisecond duration  = 2^steps
 
   time = time >> steps;
@@ -271,7 +271,7 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
     else
       newb = (int32_t)b2 << scaler;
 
-    for(int i=SUNSET_START;i<=SUNSET_STOP;i++){
+    for(int i=SUNSET_START;i<=SUNSET_STOP;i++){ 
       strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
     }
     strip.show();
@@ -341,29 +341,9 @@ void loop() {
 
   switch (currentState) {
     case STATE_FADE_COLORS: {
-      fader(166, 42, 42,  // Start Color
-            140, 50, 0,   // End Color
-            420000);      // Duration of fade
+      fader(186, 32, 15, 10, 2, 0, 240000);
 
-      fader(139, 50, 0, 
-            178, 34, 34,
-            420000);
-
-      fader(178, 34, 34, 
-            255, 20, 147, 
-            420000);
-
-      fader(255, 20, 147, 
-            199, 21, 133, 
-            420000);
-
-      fader(199, 21, 133, 
-            139, 0, 139, 
-            300000);
-
-      fader(139, 0, 139, 
-            11, 0, 11, 
-            240000);
+      fader(10, 2, 0, 0, 0, 0, 100000);
 
       lastFade = 1;
       count = 0;
