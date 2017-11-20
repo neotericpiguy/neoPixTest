@@ -4,8 +4,8 @@
 #define NUMPIXELS 18  // can't be more than 256
 #define PUSHBUTTON 2
 
-#define LIGHTNING_START  0  //The Whole lightning strip
-#define LIGHTNING_STOP   8
+#define LIGHTNING_START  18  //The Whole lightning strip
+#define LIGHTNING_STOP   30 
 #define SUNSET_START     0  //Sunset strip 
 #define SUNSET_STOP      17
 
@@ -28,6 +28,11 @@ struct LightningDef{
   uint8_t b;
   unsigned int duration; 
 };
+
+const int startingBrightness     = 0;
+const int maxLightningBrightness = 200;
+const int lightningFadeInc       = 1;
+int lightningBrightness          = 100;
 
 int currentState;
 int lastFade;
@@ -194,46 +199,54 @@ const LightningDef lightning[] = {
 };
 
 void setup() {
-// Serial.begin(9600); //DEBUG output
- pinMode(PUSHBUTTON, INPUT);
- currentState = STATE_LIGHTNING;
- lastFade = 0;
- strip.begin();
+  // Serial.begin(9600); //DEBUG output
+  pinMode(PUSHBUTTON, INPUT);
+  currentState = STATE_LIGHTNING;
+  lastFade = 0;
+  strip.begin();
 
- //make sure all pixels are off
- for(int i=0;i<NUMPIXELS;i++){
-   strip.setPixelColor(i, strip.Color(0,0,0));
- }
- strip.show();
+  // make sure all pixels are off
+  for (int i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, 0));
+  }
+  strip.show();
 }
 
-//Reset the brightness
+//Reset the lightningBrightness
 void startFadeSunset() {
   //Make sure the lightning strip aren't on
   for(int i=LIGHTNING_START;i<LIGHTNING_STOP;i++){
     strip.setPixelColor(i, strip.Color(0,0,0));
   }
   strip.show();
-  //reset brightness for fade
+  //reset lightningBrightness for fade
   currentState = STATE_FADE_COLORS;
 }
 
-void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned long duration)
-{
+void setLightning(int start, int stop, int16_t r, int16_t g, int16_t b, unsigned int duration) {
   static unsigned long time = 0;
-  if (time == 0)
-  {
+
+  if (time == 0) {
     time = millis();
 
-    for (int i = start ; i <= stop; i++) {
-      strip.setPixelColor(i, r, g, b);
+    if (lastFade == 1 && lightningBrightness < maxLightningBrightness) {
+      if (lightningBrightness + lightningFadeInc < maxLightningBrightness)
+        lightningBrightness += lightningFadeInc;
+      else {
+        lastFade = 0;
+        lightningBrightness = maxLightningBrightness;
+      }
+    }
+
+    for (int i = start; i <= stop; i++) {
+      strip.setPixelColor(i, r * lightningBrightness / maxLightningBrightness, g * lightningBrightness / maxLightningBrightness, b * lightningBrightness / maxLightningBrightness);
     }
 
     strip.show();  // This sends the updated pixel color to the hardware.
     return;
   }
 
-  if (millis() - time > duration) {
+  if (millis() - time >= duration) {
     currentState++;
     time = 0;
   }
@@ -246,22 +259,21 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 
   time = time >> steps;
 
-  const int16_t rinc=((1 << scaler)/(double)time)*(r2-r1);
-  const int16_t ginc=((1 << scaler)/(double)time)*(g2-g1);
-  const int16_t binc=((1 << scaler)/(double)time)*(b2-b1);
+  const int16_t rinc = ((1 << scaler) / (double)time) * (r2 - r1);
+  const int16_t ginc = ((1 << scaler) / (double)time) * (g2 - g1);
+  const int16_t binc = ((1 << scaler) / (double)time) * (b2 - b1);
 
   int32_t newr = (int32_t)r1 << scaler;
   int32_t newg = (int32_t)g1 << scaler;
   int32_t newb = (int32_t)b1 << scaler;
 
-  for(uint32_t i = 0 ; i < time; i++) 
-  {
+  for (uint32_t i = 0; i < time; i++) {
     newr += rinc;
     newg += ginc;
     newb += binc;
 
-    for(int i=SUNSET_START;i<=SUNSET_STOP;i++){ 
-      strip.setPixelColor(i,newr >> scaler,newg >> scaler,newb >> scaler);
+    for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
+      strip.setPixelColor(i, newr >> scaler, newg >> scaler, newb >> scaler);
     }
     strip.show();
 
@@ -271,59 +283,59 @@ void fader(int16_t r1,int16_t g1,int16_t b1,int16_t r2,int16_t g2,int16_t b2, ui
 
 void loop() {
   static unsigned long count = 0; 
+
   if(digitalRead(PUSHBUTTON))
     startFadeSunset();
 
-  if (lastFade == 1) {
-    static int32_t newr;
-    static int32_t newg;
-    static int32_t newb;
-
-    if (count == 0) {
-      newr = 11; // last fade starting color
-      newg = 0;
-      newb = newr;
-      t = false;
-      currentState = STATE_LIGHTNING;
-    }
-
-    count++;
-
-//    if (count % 1000 == 0 || (newr < 20 && count % 5 == 0)) {
+//  if (lastFade == 1) {
+//    static int32_t newr;
+//    static int32_t newg;
+//    static int32_t newb;
+//
+//    if (count == 0) {
+//      newr = 11; // last fade starting color
+//      newg = 0;
+//      newb = newr;
+//      t = false;
+//      currentState = STATE_LIGHTNING;
+//    }
+//
+//    count++;
+//
+////    if (count % 1000 == 0 || (newr < 20 && count % 5 == 0)) {
+////    if (count % 6666 == 0) { //10.30 minutes
 //    if (count % 6666 == 0) { //10.30 minutes
-    if (count % 6666 == 0) { //10.30 minutes
-      newr -= 1;
-      newb -= 1;
+//      newr -= 1;
+//      newb -= 1;
+//
+//      if (newr < 1) {
+//        for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
+//          strip.setPixelColor(i, 0, 0, 0);
+//        }
+//        strip.show();
+//
+//        lastFade = 0;
+//      }
+//
+//      for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
+//        strip.setPixelColor(i, newr, newg, newb);
+//      }
+//      strip.show();
+//    }
+//  }
 
-      if (newr < 1) {
-        for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
-          strip.setPixelColor(i, 0, 0, 0);
-        }
-        strip.show();
+  if (currentState >= (int)STATE_LIGHTNING) {
+    const int lightningIndex = currentState - (int)STATE_LIGHTNING;
 
-        lastFade = 0;
-      }
-
-      for (int i = SUNSET_START; i <= SUNSET_STOP; i++) {
-        strip.setPixelColor(i, newr, newg, newb);
-      }
-      strip.show();
-    }
-  }
-
-  if(currentState >= (int)STATE_LIGHTNING)
-  {
-    int lightningIndex = currentState - (int)STATE_LIGHTNING;
-
-    if(lightningIndex > sizeof(lightning)/sizeof(lightning[0]))
+    if (lightningIndex > sizeof(lightning) / sizeof(lightning[0]))
       currentState = STATE_LIGHTNING;
 
     setLightning(lightning[lightningIndex].startPixel,
-        lightning[lightningIndex].stopPixel, 
-        lightning[lightningIndex].r,
-        lightning[lightningIndex].g, 
-        lightning[lightningIndex].b,
-        lightning[lightningIndex].duration);
+                 lightning[lightningIndex].stopPixel,
+                 lightning[lightningIndex].r, 
+                 lightning[lightningIndex].g,
+                 lightning[lightningIndex].b,
+                 lightning[lightningIndex].duration);
 
     return;
   }
@@ -334,8 +346,9 @@ void loop() {
 
       fader(10, 2, 0, 0, 0, 0, 100000);
 
-//      lastFade = 1;
-//      count = 0;
+      lastFade = 1;
+      lightningBrightness = startingBrightness;
+      //      count = 0;
       currentState = STATE_LIGHTNING;
     } break;
   }
