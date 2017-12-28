@@ -295,19 +295,19 @@ void loop()
     static double binc;
 
     if (count == 0) {
-      newr = 10;  // last fade starting color
-      newg = 2;
+      newr = 100;  // last fade starting color
+      newg = 20;
       newb = 0;
       currentState = STATE_LIGHTNING;
 
-      rinc = 1;
-      ginc = 1;
-      binc = 1;
+      rinc = 50/50.0;
+      ginc = 20/50.0;
+      binc = 0;
     }
 
     count++;
 
-    if (count % 100000 == 0) {  // 10.30 minutes
+    if (count % 10000 == 0) {  // 10.30 minutes
       static bool t = true;
       if (newr - rinc > 0) newr -= rinc;
       if (newg - ginc > 0) newg -= ginc;
@@ -345,12 +345,8 @@ void loop()
 
   switch (currentState) {
     case STATE_FADE_COLORS: {
-      fader(186, 32, 15, 10, 2, 0, 240000);
-//      fader(10, 2, 0, 0, 0, 0, 100000);
+      fader(186, 32, 15, 100, 20, 0, 240000);
 
-//      fader(186, 32, 15, 10, 2, 0, 5000);
-//      fader(10, 2, 0, 0, 0, 0, 100000);
-//      fader(10, 2, 0, 0, 0, 0, 15000);
       lastFade = 1;
       count = 0;
       lightningBrightness = startingBrightness;
