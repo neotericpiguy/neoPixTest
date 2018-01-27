@@ -345,9 +345,10 @@ void loop()
 
   switch (currentState) {
     case STATE_FADE_COLORS: {
-      fader(186, 32, 15, 100, 20, 0, 240000);
+//      fader(186, 32, 15, 100, 20, 0, 240000);
+      fader(186, 32, 15, 0, 0, 0, 240000);
 
-      lastFade = 1;
+      lastFade = 0;
       count = 0;
       lightningBrightness = startingBrightness;
       currentState = STATE_LIGHTNING;
