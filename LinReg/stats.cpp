@@ -122,7 +122,7 @@ public:
 
     outFile << std::endl;
     system(std::string("gnuplot -p " + outputFilename + ".plot").c_str());
-    system(std::string("rm " + outputFilename + ".plot").c_str());
+//    system(std::string("rm " + outputFilename + ".plot").c_str());
     return 0;
   }
 
