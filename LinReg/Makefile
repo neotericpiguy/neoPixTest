@@ -1,4 +1,10 @@
-all: linreg
+SRCS=$(shell find -iname '*.cpp')
+EXES=${SRCS:.cpp=}
 
-linreg: main.cpp
-	g++ -o $@ $^
+$(info SRCS: ${SRCS})
+$(info EXES: ${EXES})
+
+all: ${EXES}
+
+clean: 
+	-rm ${EXES}
