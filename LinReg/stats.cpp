@@ -20,6 +20,12 @@ public:
     double Sxx;
     double Sxy;
     double Syy;
+    double xMin;
+    double xMax;
+    double yMin;
+    double yMax;
+    double xMean;
+    double yMean;
     unsigned int n;
     double m;
     double b;
@@ -50,6 +56,7 @@ public:
           break;
         datas.push_back(data);
       } while (instream.get() != '\n');
+
       if (instream.eof())
         break;
 
@@ -75,13 +82,52 @@ public:
 
   int addPair(const std::string& key, double x, double y)
   {
-    mStatPairs[key].Sx += x;
-    mStatPairs[key].Sy += y;
-    mStatPairs[key].Sxx += x * x;
-    mStatPairs[key].Syy += y * y;
-    mStatPairs[key].Sxy += x * y;
-    mStatPairs[key].n++;
+    StatsData& statsData = mStatPairs[key];
+    if (statsData.n == 0)
+    {
+      statsData.xMin = x;
+      statsData.yMin = y;
+      statsData.xMax = x;
+      statsData.yMax = y;
+    }
 
+    if (x < statsData.xMin)
+      statsData.xMin = x;
+    if (y < statsData.yMin)
+      statsData.yMin = y;
+
+    if (x > statsData.xMax)
+      statsData.xMax = x;
+    if (y > statsData.yMax)
+      statsData.yMax = y;
+
+    statsData.Sx += x;
+    statsData.Sy += y;
+    statsData.Sxx += x * x;
+    statsData.Syy += y * y;
+    statsData.Sxy += x * y;
+    statsData.n++;
+    statsData.xMean = statsData.Sx / statsData.n;
+    statsData.yMean = statsData.Sy / statsData.n;
+
+    return 0;
+  }
+
+  int printStats(const std::string& key) const
+  {
+    const StatsData& statsData = mStatPairs.at(key);
+    std::cout << "statsData.xMin:  " << statsData.xMin << std::endl;
+    std::cout << "statsData.yMin:  " << statsData.yMin << std::endl;
+    std::cout << "statsData.xMax:  " << statsData.xMax << std::endl;
+    std::cout << "statsData.yMax:  " << statsData.yMax << std::endl;
+    std::cout << "statsData.Sx:    " << statsData.Sx << std::endl;
+    std::cout << "statsData.Sy:    " << statsData.Sy << std::endl;
+    std::cout << "statsData.Sxx:   " << statsData.Sxx << std::endl;
+    std::cout << "statsData.Syy:   " << statsData.Syy << std::endl;
+    std::cout << "statsData.Sxy:   " << statsData.Sxy << std::endl;
+    std::cout << "statsData.n:     " << statsData.n << std::endl;
+    std::cout << "statsData.xMean: " << statsData.xMean << std::endl;
+    std::cout << "statsData.yMean: " << statsData.yMean << std::endl;
     return 0;
   }
 
@@ -122,7 +168,7 @@ public:
 
     outFile << std::endl;
     system(std::string("gnuplot -p " + outputFilename + ".plot").c_str());
-//    system(std::string("rm " + outputFilename + ".plot").c_str());
+    //    system(std::string("rm " + outputFilename + ".plot").c_str());
     return 0;
   }
 
@@ -162,8 +208,7 @@ int main(int argc, char** argv)
   data.open(filename);
   data.LinRegCoefs("data");
   const Stats::StatsData& linData = data.getStats("data");
-  std::cout << linData.m << std::endl;
-  std::cout << linData.b << std::endl;
+  data.printStats("data");
   data.plot("data", "data.png");
   //  data.plotLinReg("file.plot");
 
