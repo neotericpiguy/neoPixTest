@@ -210,7 +210,6 @@ int main(int argc, char** argv)
   const Stats::StatsData& linData = data.getStats("data");
   data.printStats("data");
   data.plot("data", "data.png");
-  //  data.plotLinReg("file.plot");
 
   return 0;
 }

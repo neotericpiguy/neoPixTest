@@ -7,4 +7,4 @@ $(info EXES: ${EXES})
 all: ${EXES}
 
 clean: 
-	-rm ${EXES}
+	-rm -rf ${EXES}
